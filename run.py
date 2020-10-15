@@ -26,7 +26,10 @@ import torch.optim as optim
 from gcommands_loader import Loader
 from model import TDNN, VGG, LeNet
 from train import test, train
+from pretrained_models import initialize_model
 
+#Directori del model preentrenat
+PATH = "trained_models/model_1.pth"
 
 def main():
     # Training settings
@@ -82,13 +85,24 @@ def main():
             model = VGG(args.arc)
         elif args.arc == 'TDNN':
             model = TDNN()
-        else:
+        elif args.arc == 'LeNet':
             model = LeNet()
+        elif args.arc == 'Pretrained':
+            model_name = "gcommands"
+            #num_classes = depen de la databse
+            feature_extract = False
+            model, input_size = initialize_model(model_name, num_classes, feature_extract, use_pretrained=True)
 
         if args.cuda:
             model = torch.nn.DataParallel(model).cuda()
 
         # define optimizer
+        '''
+        if feature_extract == True:
+            MODIFICACIÓ DELS LAYERS A ENTRENAR (Nomes classifier)
+
+        else --> S'entrenen tots els layers de la red
+        '''
         if args.optimizer.lower() == 'adam':
             optimizer = optim.Adam(model.parameters(), lr=args.lr)
         else:
@@ -123,6 +137,10 @@ def main():
                     os.mkdir(args.checkpoint)
                 torch.save(state, './{}/ckpt.t7'.format(args.checkpoint))
             epoch += 1
+
+            #Save model here?
+            #Possible implementation of an argument to decide if we save the models
+            torch.save(model.state_dict(), PATH)
 
 
     # test model
